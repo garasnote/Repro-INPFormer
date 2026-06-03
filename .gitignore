@@ -1,0 +1,34 @@
+# Weights and results
+backbones/*.pth
+backbones/*.pt
+saved_results/
+*.pth
+*.pt
+*.onnx
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# Data (download separately)
+data/
+mvtec_anomaly_detection/
+VisA_pytorch/
+Real-IAD/
+
+# IDE / OS
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# SLURM output
+output/
+slurm-*.out
+*.out
+
+# Logs
+logs/
