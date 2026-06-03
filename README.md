@@ -44,7 +44,7 @@ conda activate INP
 pip install -r requirements.txt
 ```
 
-Tested on NVIDIA A100 (80GB) and RTX 4090 (24GB).
+Tested on NVIDIA A100 (80GB) and L4 (24GB).
 
 ### Backbone Weights
 
