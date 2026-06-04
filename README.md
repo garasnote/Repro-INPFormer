@@ -26,7 +26,7 @@ Reproduction and extended analysis of [INP-Former: Exploring Intrinsic Normal Pr
 ├── backbones/            # Encoder weights (auto-downloaded)
 ├── dinov2/               # DINOv2 backbone (default)
 ├── optimizers/           # StableAdamW
-├── scripts/              # SLURM job scripts (FRIDA cluster)
+├── scripts/              # SLURM job scripts (SLURM cluster)
 ├── paper/                # Reproducibility report (TMLR format)
 ├── assets/               # Figures from the original paper
 └── EXPERIMENTS.md        # Experiment tracker with all results
