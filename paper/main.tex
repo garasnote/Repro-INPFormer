@@ -13,8 +13,9 @@
 \usepackage{booktabs}
 \usepackage{multirow}
 \usepackage{amsmath}
+\usepackage{float}
 
-\title{[Re] INP-Former: Reconstructing Intrinsic Normal Prototypes for Industrial Anomaly Detection}
+\title{Reproducing INP-Former: Reconstructing Intrinsic Normal Prototypes for Industrial Anomaly Detection}
 
 % Authors must not appear in the submitted version. They should be hidden
 % as long as the tmlr package is used without the [accepted] or [preprint] options.
@@ -44,6 +45,8 @@
 \begin{abstract}
 % Scope: what paper, what claims, what we did, what we found
 We reproduce the central claims of \citet{inp_former_2025}, which introduces INP-Former, a reconstruction-based method for multi-class industrial anomaly detection. The method extracts Intrinsic Normal Prototypes (INPs) from test images themselves, avoiding the need for stored memory banks, and uses them to guide a decoder that reconstructs normal features. We verify the main performance claims on MVTec AD and VisA using the authors' released code, extend the evaluation to MVTec AD 2, and conduct ablation studies on the loss components, number of prototypes, input resolution, and backbone architecture. Beyond reproduction, we propose several extensions: (1) LoRA-based parameter-efficient transfer learning from Real-IAD to downstream benchmarks, (2) an analysis of how anomaly area size affects detection performance, (3) an inference speed benchmark, (4) a lighting robustness evaluation on MVTec AD 2, and (5) an epoch efficiency analysis showing convergence behavior. Our reproduction supports the central claims: INP-Former achieves state-of-the-art multi-class anomaly detection, and both the INP mechanism and the proposed loss terms contribute meaningfully to performance. We additionally find that the optimal number of prototypes varies across datasets, that LoRA adaptation can recover most of the fully-trained performance using only 5\% of trainable parameters, that the model largely converges by epoch 50, that small anomalies are the primary failure mode, and that the method is robust to brightness changes but vulnerable to color shifts.
+
+The code we used for reproducing the study can be found here: \url{https://anonymous.4open.science/r/Repro-INPFormer-D6D1/README.md}
 \end{abstract}
 
 
@@ -52,7 +55,7 @@ We reproduce the central claims of \citet{inp_former_2025}, which introduces INP
 \label{sec:intro}
 % ============================================================================
 
-Industrial anomaly detection (AD) aims to identify defective products in manufacturing using only normal training samples. Recent reconstruction-based approaches learn to encode and reconstruct normal patterns; at test time, anomalies produce high reconstruction error and are thus detected. A key challenge in multi-class settings---where a single model handles all product categories---is that the model must capture diverse normal appearances without conflating them.
+Industrial anomaly detection (AD) aims to identify defective products in manufacturing using only normal training samples. Recent reconstruction-based approaches learn to encode and reconstruct normal patterns; at test time, anomalies produce high reconstruction error and are thus detected. A key challenge in multi-class settings where a single model handles all product categories is that the model must capture diverse normal appearances without conflating them.
 
 \citet{inp_former_2025} propose INP-Former, which addresses this by extracting \emph{Intrinsic Normal Prototypes} (INPs) directly from test images via cross-attention aggregation, rather than relying on stored memory banks or class-specific models. The INPs capture the dominant normal patterns present in each test image and guide a prototype-guided decoder to reconstruct features. Anomalous regions, which deviate from the extracted normal prototypes, yield high reconstruction error. The method additionally introduces a soft-mining loss $\mathcal{L}_{sm}$ and a coherence loss $\mathcal{L}_c$ to improve training stability.
 
@@ -76,7 +79,7 @@ We investigate the following claims from \citet{inp_former_2025}:
 \begin{description}
     \item[Claim 1:] INP-Former achieves state-of-the-art multi-class anomaly detection performance, reporting 99.6\% image-level AUROC on MVTec AD and 98.8\% on VisA with a single unified model.
 
-    \item[Claim 2:] The INP mechanism is essential---removing it (replacing the prototype-guided decoder with a standard bottleneck + self-attention decoder) substantially degrades performance.
+    \item[Claim 2:] The INP mechanism is essential: removing it (replacing the prototype-guided decoder with a standard bottleneck + self-attention decoder) substantially degrades performance.
 
     \item[Claim 3:] Both the soft-mining loss $\mathcal{L}_{sm}$ and coherence loss $\mathcal{L}_c$ contribute to the final performance. The full model with both losses outperforms ablated variants.
 
@@ -100,8 +103,8 @@ We use the authors' released code without modification to the core model archite
 \begin{itemize}
     \item \textbf{MVTec AD}~\citep{bergmann2019mvtec}: 15 categories of industrial products and textures. 3,629 training images (normal only), 1,725 test images.
     \item \textbf{VisA}~\citep{zou2022visa}: 12 categories of complex structures. 8,659 training images, 2,102 test images.
-    \item \textbf{MVTec AD 2}~\citep{mvtecad2_2024}: 7 categories with more challenging anomalies including subtle defects and lighting variations. Not evaluated in the original paper.
-    \item \textbf{Real-IAD}~\citep{realiad2024}: 30 categories of real industrial products. Used as source domain for transfer learning experiments.
+    \item \textbf{MVTec AD 2}~\citep{mvtecad2_2024}: 8 categories with more challenging anomalies including subtle defects and lighting variations. Not evaluated in the original paper. Due to a technical issue with the download link being down we had to omit the fabric category altogether thus utilizing 7/8 of the classes.
+    \item \textbf{Real-IAD}~\citep{realiad2024}: 30 categories of real industrial products. Used as source domain for transfer learning experiments. We did not use it to train for multi-class anomaly detection as the dataset was far larger compared to other 2 (53 GB vs approximately 2 GB for ViSa and ~5 GB for MVTEC AD)
 \end{itemize}
 
 \subsection{Hyperparameters}
@@ -110,8 +113,7 @@ We follow the exact hyperparameters reported in the original paper: input size 4
 
 \subsection{Experimental Setup}
 
-All experiments were conducted on the FRIDA HPC cluster (University of Ljubljana) using NVIDIA A100-SXM4-40GB and L4-24GB GPUs, using a Singularity container with PyTorch and CUDA. Each multi-class training run (200 epochs) takes approximately 7 hours on A100 or 15 hours on L4.
-
+All experiments were conducted on an institutional HPC cluster using NVIDIA A100-SXM4-40GB and L4-24GB GPUs.
 \subsection{Evaluation Metrics}
 
 We report image-level AUROC (I-AUROC) for detection, pixel-level AUROC (P-AUROC) for segmentation, and per-region overlap AU-PRO at FPR$\leq$0.3 (P-AUPRO) for localization quality. All metrics are computed per-category and averaged.
@@ -159,10 +161,10 @@ Per-category results are provided in Appendix~\ref{app:per_category}.
 \subsection{Claim 2: INP Mechanism is Essential}
 \label{sec:results_inp}
 
-Table~\ref{tab:ablation_loss} shows the loss/module ablation with multiple random seeds on MVTec AD, alongside the values reported in the original paper (Table~5 of \citealt{inp_former_2025}). Removing the INP mechanism entirely (``No INP'' row) reduces I-AUROC by 1.4 points and P-AUPRO by 3.3 points compared to INP + $\mathcal{L}_{sm}$, confirming that the INP mechanism provides a meaningful contribution. Our No INP result (98.19) is slightly lower than the original's (98.59), but the gap to INP-enabled configurations is consistent.
+Table~\ref{tab:ablation_loss} shows the loss/module ablation with multiple random seeds on MVTec AD, alongside the values reported in the original paper (Table~5 of \citealt{inp_former_2025}). Removing the INP mechanism entirely (``No INP'' row) reduces I-AUROC by 1.4 points and P-AUPRO by 3.3 points compared to INP + $\mathcal{L}_{sm}$, confirming that the INP mechanism provides a meaningful contribution. Our No INP result (98.19) is slightly lower than the original's (98.59), but it's still within the range of variance for the no-INP setting. We observe that the experimental settings with INP enabled achieved lower variance overall and thus provided more stable inference results.
 
 \begin{table}[t]
-\caption{Loss and module ablation on MVTec AD. ``Original'' values from Table~5 of \citet{inp_former_2025}; ``Ours'' are mean $\pm$ std over 5 seeds. Rows marked --- were not reproduced due to computational constraints. Row 4$^\dagger$ was not tested in the original paper; we add it to isolate $\mathcal{L}_{sm}$'s contribution.}
+\caption{Loss and module ablation on MVTec AD. ``Original'' values from Table~5 of \citet{inp_former_2025}; ``Ours'' are mean $\pm$ std over 5 seeds. Rows marked with  "---" were not reproduced due to computational constraints. Row 4$^\dagger$ was not tested in the original paper; we add it to isolate $\mathcal{L}_{sm}$'s contribution.}
 \label{tab:ablation_loss}
 \begin{center}
 \small
@@ -188,16 +190,17 @@ Full           & \checkmark & \checkmark & \checkmark & 99.67 & 94.87 & $99.62 \
 \subsection{Claim 3: Loss Component Contributions}
 \label{sec:results_loss}
 
-The ablation in Table~\ref{tab:ablation_loss} addresses Claim 3. Our Full configuration achieves $99.62 \pm 0.01$\% I-AUROC and $94.92 \pm 0.07$\% P-AUPRO, closely matching the original (99.67/94.87).
+The ablation in Table~\ref{tab:ablation_loss} addresses Claim 3. Our Full configuration achieves $99.62 \pm 0.01$\% I-AUROC and $94.92 \pm 0.07$\% P-AUPRO, closely matching the original (99.67/94.87) results on MVTec AD.
 
-The original paper tested INP + $\mathcal{L}_c$ (without $\mathcal{L}_{sm}$) but never isolated INP + $\mathcal{L}_{sm}$ (without $\mathcal{L}_c$). We fill this gap: our INP + $\mathcal{L}_{sm}$ achieves $99.64 \pm 0.04$\% I-AUROC and $94.85 \pm 0.08$\% P-AUPRO---nearly identical to the Full configuration. This suggests $\mathcal{L}_{sm}$ alone captures most of the benefit, and adding $\mathcal{L}_c$ on top provides negligible improvement ($<$0.1 points).
+The original paper tested INP + $\mathcal{L}_c$ (without $\mathcal{L}_{sm}$) but never isolated INP + $\mathcal{L}_{sm}$ (without $\mathcal{L}_c$). We fill this gap: our INP + $\mathcal{L}_{sm}$ achieves $99.64 \pm 0.04$\% I-AUROC and $94.85 \pm 0.08$\% P-AUPRO. Read alongside the Full configuration and the original's INP + $\mathcal{L}_c$ row, this exposes a pattern that the original paper's discussion does not separate: the two auxiliary losses contribute to different metrics.
 
-Comparing to the original paper's results, the picture is more nuanced. Their INP + $\mathcal{L}_c$ configuration achieves 99.61/95.10 (I-AUROC/P-AUPRO), the highest P-AUPRO of any configuration---including Full (94.87). This suggests $\mathcal{L}_c$ may contribute meaningfully to localization, even if $\mathcal{L}_{sm}$ drives most of the detection improvement. However, we were unable to reproduce the INP + $\mathcal{L}_c$ and INP-only configurations to verify this interaction due to computational constraints.
+\textbf{$\mathcal{L}_{sm}$ primarily improves image-level detection.} On MVTec AD I-AUROC, the original Table~5 reports 99.53 (INP only) $\to$ 99.61 (+ $\mathcal{L}_c$) $\to$ 99.67 (+ $\mathcal{L}_{sm}$): the $\mathcal{L}_{sm}$ step adds 0.06 points, comparable to the 0.08 from $\mathcal{L}_c$. Our reproduction sharpens this: INP + $\mathcal{L}_{sm}$ alone reaches $99.64 \pm 0.04$\%, statistically indistinguishable from the Full configuration's $99.62 \pm 0.01$\%. This aligns with the loss's stated motivation: upweighting hard-to-reconstruct normal patches widens the gap between normal and anomalous responses, and image-level AUROC (computed from max-pooled anomaly scores) rewards exactly that contrast.
 
-Due to these constraints (each configuration requires $\sim$75 GPU-hours for 5 seeds), we reproduced 3 of the 5 configurations on MVTec AD only, choosing the endpoints (No INP, Full) and one novel intermediate (INP + $\mathcal{L}_{sm}$) to maximize the insight per GPU-hour. The original paper additionally reports results on VisA, where the same trends hold.
+\textbf{$\mathcal{L}_c$ primarily improves pixel-level localization.} The P-AUPRO trajectory in the original paper runs in the opposite direction: 94.69 (INP only) $\to$ 95.10 (+ $\mathcal{L}_c$) $\to$ 94.87 (+ $\mathcal{L}_{sm}$). Adding $\mathcal{L}_c$ produces a $+0.41$ jump, the largest single-loss contribution to either metric on MVTec AD, and adding $\mathcal{L}_{sm}$ on top \emph{reduces} P-AUPRO by $0.23$ points. Our reproduction is directionally consistent: Full ($94.92 \pm 0.07$) edges past INP + $\mathcal{L}_{sm}$ ($94.85 \pm 0.08$), though within seed noise. The mechanism is intuitive: $\mathcal{L}_c$ forces the extracted INPs to coherently represent normality, yielding cleaner reconstructions of normal regions and thus crisper anomaly-map boundaries: precisely what AU-PRO rewards.
 
-Note the substantially lower variance of the INP configurations ($\pm 0.01$--$0.04$) compared to No INP ($\pm 0.65$), suggesting that the INP mechanism also improves training stability---a finding not discussed in the original paper.
+\textbf{The prescribed defaults are not optimal on either metric.} The authors present the Full configuration ($\lambda=0.2$, $\gamma=3$) as the recommended setting and apply identical hyperparameters across MVTec AD, VisA, and Real-IAD. But by their own MVTec AD numbers, no single configuration is best on both metrics simultaneously: INP + $\mathcal{L}_c$ achieves the highest P-AUPRO (95.10) while Full achieves the highest I-AUROC (99.67) at the cost of $0.23$ P-AUPRO points. The gap between Full and each metric's optimum is of similar magnitude to the gain Full claims over INP-only, suggesting the two losses target different failure modes rather than jointly improving the same one. Practitioners with a clear primary objective should consider tuning $\lambda$ and $\gamma$ accordingly: an image-level pass/fail use case can likely drop $\mathcal{L}_c$ at no measurable cost, while a localization-critical use case (e.g., downstream defect classification or root-cause analysis) may benefit from reducing or removing $\mathcal{L}_{sm}$. We note that this metric specialization is most apparent on MVTec AD; on VisA, Table~5 of the original paper shows $\mathcal{L}_{sm}$ improving both metrics simultaneously (P-AUPRO $93.71 \to 94.36$, I-AUROC $98.16 \to 98.90$ when added on top of $\mathcal{L}_c$), so the prescription happens to be reasonable there.
 
+Due to computational constraints (each configuration requires $\sim$75 GPU-hours for 5 seeds), we reproduced 3 of the 5 configurations on MVTec AD only, choosing the endpoints (No INP, Full) and one novel intermediate (INP + $\mathcal{L}_{sm}$) to maximize the insight per GPU-hour. Reproducing INP + $\mathcal{L}_c$ and INP-only under our seeding protocol, to confirm the $\mathcal{L}_c$ localization benefit reproduces with variance estimates: is the most informative follow-up experiment we did not run.
 
 \subsection{Claim 4: Effect of INP Count}
 \label{sec:results_inp_count}
@@ -224,8 +227,7 @@ $M$ & I-AUROC & P-AUROC & P-AUPRO \\
 \end{center}
 \end{table}
 
-Interestingly, the optimal $M$ on MVTec AD 2 is lower ($M=2$ for I-AUROC, $M=4$ for P-AUROC) than on MVTec AD/VisA ($M=6$). Performance degrades monotonically for $M \geq 4$ on I-AUROC. This suggests that the ideal number of prototypes is dataset-dependent: MVTec AD 2 has fewer categories (7 vs.\ 15) and different anomaly characteristics, potentially requiring fewer prototypes to capture the normal distribution. With too many prototypes, the model may overfit to noise or redundantly represent similar normal patterns.
-
+Interestingly, the optimal $M$ on MVTec AD 2 is lower ($M=2$ for I-AUROC, $M=4$ for P-AUROC) than on MVTec AD/VisA ($M=6$). Performance degrades monotonically for $M \geq 4$ on I-AUROC. This suggests that the ideal number of prototypes is dataset-dependent: we hypothesize that given MVTec AD 2 has fewer categories (7 vs.\ 15) and different anomaly characteristics, it potentially requires fewer prototypes to capture the normal distribution. With too many prototypes, the model may overfit to noise or redundantly represent similar normal patterns.
 
 % ============================================================================
 \section{Additional Experiments Beyond the Original Paper}
@@ -311,13 +313,12 @@ Full train & 99.67 & 98.45 & 94.95 & 98.90 & 98.97 & 95.27 \\
 \end{center}
 \end{table}
 
-LoRA finetuning with only 5\% trainable parameters recovers the majority of fully-trained performance. At $r=8$, MVTec AD reaches 98.2\% I-AUROC (vs.\ 99.7\% full train) and VisA reaches 94.4\% (vs.\ 98.9\%). Performance scales consistently with rank: each doubling of $r$ improves I-AUROC by 0.3--1.4 points, with diminishing returns. The improvement over zero-shot transfer is dramatic: +29.0 I-AUROC on MVTec AD and +43.0 on VisA for $r=8$. P-AUPRO shows a similar trend, with LoRA $r=8$ reaching 92.5\% vs.\ 95.0\% full train on MVTec AD. This demonstrates that the decoder representations learned on one industrial dataset are largely transferable, and only minor low-rank adjustments are needed to adapt to a new domain.
-
+LoRA finetuning with only 5\% trainable parameters recovers the majority of fully-trained performance. At $r=8$, MVTec AD reaches 98.2\% I-AUROC (vs.\ 99.7\% full train) and VisA reaches 94.4\% (vs.\ 98.9\%). Performance scales consistently with rank: each doubling of $r$ improves I-AUROC by 0.3--1.4 points, with diminishing returns. The improvement over zero-shot transfer is dramatic: +29.0 I-AUROC on MVTec AD and +43.0 on VisA for $r=8$. P-AUPRO shows a similar trend, with LoRA $r=8$ reaching 92.5\% vs.\ 95.0\% full train on MVTec AD. Our experiments suggest that although INP-former is unable to learn generic representations that would enable it to perform accurate anomaly detection zero-shot, the representations learned from industrial datasets are largely transferrable between different datasets and only minor low-rank adjustments can help the model adapt to a new domain.
 
 \subsection{Anomaly Area vs.\ Detection and Localization Performance}
 \label{sec:area}
 
-We investigate how anomaly size affects detection and localization performance. Our initial hypothesis was that large anomalies would degrade INP extraction (fewer normal patches available for prototype aggregation), leading to worse detection. The results reveal a more nuanced picture.
+We investigate how anomaly size affects detection performance. Our initial hypothesis was that large anomalies would degrade INP extraction, fewer normal patches available for prototype learning. INP-Former's original premise was that it would be able to learn normality within images since most defective images would be dominated by the distribution of normal data, leading to worse detection when there are larger percent of anomalous areas. However, the results show the opposite trend.
 
 On MVTec AD (1,258 anomalous images), anomaly score correlates positively with ground-truth anomaly area (Spearman $\rho = +0.53$, $p < 10^{-90}$). VisA shows an even stronger correlation ($\rho = +0.79$). Table~\ref{tab:area} shows per-bin I-AUROC and P-AUPRO for both datasets, where each bin's anomalous images are evaluated against all normal images. Both datasets exhibit the same dual trend.
 
@@ -341,11 +342,11 @@ Q5 (largest 20\%)  & 100.0 & 83.0 & 99.9 & 87.5 \\
 \end{center}
 \end{table}
 
-The two metrics reveal opposite trends with anomaly size. \textbf{Image-level detection} (I-AUROC) improves monotonically: small defects ($<$0.5\% area) are hardest to detect (90.7\%), while large defects ($>$6.2\%) are trivially detected (100.0\%). This is expected---larger defects produce more patches with high reconstruction error, yielding a stronger aggregate anomaly signal.
+The two metrics reveal opposite trends with anomaly size. \textbf{Image-level detection} (I-AUROC) improves monotonically: small defects ($<$0.5\% area) are hardest to detect (90.7\%), while large defects ($>$6.2\%) are trivially detected (100.0\%). This is expected, larger defects produce more patches with high reconstruction error, yielding a stronger aggregate anomaly signal.
 
 However, \textbf{pixel-level localization} (P-AUPRO) shows the reverse: it \emph{degrades} from 96.0\% for tiny defects to 83.0\% for large ones. This reflects the per-region nature of AU-PRO: large anomalies span more pixels and have more complex boundaries, making precise localization harder. The model correctly identifies the image as anomalous but struggles to delineate the exact defect boundary. Small defects, when detected, are localized more precisely because the anomalous region is compact and well-defined.
 
-The practical implication is twofold: (1) INP-Former's detection failure mode lies in small, subtle defects---precisely the regime where industrial inspection is most challenging; (2) for large defects, detection is reliable but localization quality drops, which may matter for downstream repair or root-cause analysis.
+This implies 2 things: INP-Former's detection failure mode lies in small, subtle defects, precisely the scenario where industrial inspection is most challenging; for large defects, detection is reliable but localization quality drops, which may matter for downstream repair or root-cause analysis.
 
 
 \subsection{Epoch Efficiency}
@@ -371,16 +372,16 @@ Epoch & Loss & I-AUROC & P-AUROC & P-AUPRO & $\Delta$P-AUPRO \\
 \end{center}
 \end{table}
 
-The model exhibits rapid early convergence: at epoch 25, I-AUROC already reaches 99.3\% and P-AUPRO reaches 94.6\%---within 0.4 points of the final value. The loss drops 68\% in the first 25 epochs (0.395$\to$0.163) but only 22\% over the remaining 175 epochs. From epoch 100 onward, improvements are marginal ($<$0.1 P-AUPRO points per 50 epochs). This suggests that 50--100 epochs may be sufficient for practical deployment, halving the training cost with $<$0.2\% metric degradation.
+The model exhibits rapid early convergence: at epoch 25, I-AUROC already reaches 99.3\% and P-AUPRO reaches 94.6\%: a difference of 0.4 points from the final value. The loss drops 68\% in the first 25 epochs (0.395$\to$0.163) but only 22\% over the remaining 175 epochs. From epoch 100 onward, improvements are marginal ($<$0.1 P-AUPRO points per 50 epochs). This suggests that 50--100 epochs may be sufficient for deployment under constrained computate, halving the training cost with $<$0.2\% metric degradation.
 
 
 \subsection{AU-PRO at Strict FPR Threshold}
 \label{sec:aupro_strict}
 
-The standard AU-PRO metric integrates the per-region overlap curve up to FPR$\leq$0.3. We additionally evaluate at a stricter threshold of FPR$\leq$0.05, which better reflects industrial inspection requirements where false positives are costly (Table~\ref{tab:aupro_strict}).
+The standard AU-PRO metric integrates the per-region overlap curve up to FPR$\leq$0.3. We additionally evaluate at a stricter threshold of FPR$\leq$0.05, which better reflects industrial inspection requirements where false positives are costly (Table~\ref{tab:aupro_strict}). We're also motivated by the reasoning provided by MVTEC AD2's paper \cite{mvtecad2_2024}, which points out that the commonly used FPR value of 0.3 biases in favor of allowing false positives to pass. Thus reducing the FPR value will allow us to evaluate how the model performs when the cost of faulty results is expensive.
 
 \begin{table}[t]
-\caption{AU-PRO at standard (FPR$\leq$0.3) vs.\ strict (FPR$\leq$0.05) thresholds.}
+\caption{AU-PRO at standard (FPR$\leq$0.3) vs.\ strict (FPR$\leq$0.05) thresholds. MVTec AD 2 produced harsher degradations in performance}
 \label{tab:aupro_strict}
 \begin{center}
 \begin{tabular}{lccc}
@@ -421,7 +422,7 @@ Shift 3 & 60.92 & 88.28 & $-13.7$ \\
 \end{center}
 \end{table}
 
-This is expected: the DINOv2 encoder is trained on natural images and can handle brightness variations, but color shifts alter the feature distribution more fundamentally. Per-category analysis reveals that categories with uniform textures (wallplugs, walnuts) are most sensitive to lighting shifts, while structurally distinct categories (vial) remain robust.
+This is expected: the DINOv2 encoder is trained on natural images and can handle brightness variations, but color shifts alter the feature distribution more fundamentally. Per-category analysis (Appendix \ref{app:lightshift}) reveals that categories with uniform textures (wallplugs, walnuts) are most sensitive to lighting shifts, while structurally distinct categories (vial) remain robust.
 
 
 % ============================================================================
@@ -437,9 +438,9 @@ This is expected: the DINOv2 encoder is trained on natural images and can handle
 
 \paragraph{Practical Transfer with LoRA.} The LoRA extension demonstrates that INP-Former's decoder learns transferable normal-pattern representations. With 5\% of parameters trainable and 4$\times$ fewer training epochs, LoRA recovers the majority of fully-trained performance. This has practical implications for deployment scenarios where labeled normal data is scarce or where quick adaptation to new product lines is needed.
 
-\paragraph{Anomaly Size and Detection.} Our area analysis reveals that INP-Former's primary failure mode is small anomalies ($<0.5\%$ image area, 63.6\% detection rate). This is not specific to the INP mechanism---any reconstruction-based method will struggle when the anomalous region produces minimal reconstruction error. However, it suggests that complementary approaches (e.g., memory bank methods that compare patch-level features) could address this weakness.
+\paragraph{Anomaly Size and Detection.} Our area analysis reveals that INP-Former's primary failure mode is small anomalies ($<0.5\%$ image area, 63.6\% detection rate). This is not specific to the INP mechanism, any reconstruction-based method will struggle when the anomalous region produces minimal reconstruction error. However, it suggests that complementary approaches (e.g., memory bank methods that compare patch-level features) could address this weakness.
 
-\paragraph{Lighting Robustness.} The lightshift analysis on MVTec AD 2 shows that INP-Former is robust to brightness changes but vulnerable to color shifts. Since the DINOv2 encoder is frozen, the model cannot adapt to out-of-distribution color statistics at test time. Data augmentation during training or test-time normalization could potentially mitigate this.
+\paragraph{Lighting Robustness.} The lightshift analysis on MVTec AD 2 shows that INP-Former is robust to brightness changes but vulnerable to color shifts. Since the DINOv2 encoder is frozen, the model cannot adapt to out-of-distribution color statistics at test time.
 
 \paragraph{Inference Efficiency.} The number of INP tokens has no measurable impact on inference speed, meaning practitioners can tune $M$ for accuracy without latency concerns. Resolution is the main speed lever: dropping from 448 to 224 yields a 3.4$\times$ speedup at the cost of $-2.9$ P-AUPRO points.
 
@@ -447,24 +448,28 @@ This is expected: the DINOv2 encoder is trained on natural images and can handle
 
 \paragraph{Localization Under Strict Thresholds.} Our AU-PRO evaluation at FPR$\leq$0.05 reveals that INP-Former's pixel-level localization degrades significantly under strict false-positive constraints ($-$20.9 points on MVTec AD). This is relevant for industrial deployment where false positives trigger costly manual inspection. The gap between standard and strict AU-PRO suggests that anomaly map post-processing (e.g., adaptive thresholding, morphological filtering) may be necessary for production use.
 
-\paragraph{Limitations of This Study.} Due to computational constraints, we could not: (1) reproduce the full 5-configuration loss ablation on both MVTec AD and VisA as in the original paper, (2) run multi-seed experiments on VisA, or (3) compare against all baselines reported in the original paper. We focused our computational budget on the central claims and the most informative ablations.
+\paragraph{Limitations of This Study.} Due to computational constraints, we could not reproduce the full 5-configuration loss ablation on both MVTec AD and VisA as in the original paper, run multi-seed experiments on VisA, or compare against all baselines reported in the original paper. We focused our computational budget on the central claims and the most informative ablations.
 
 
 % ============================================================================
 \section{Conclusion}
+In conclusion, our study successfully validates the central claims of INP-Former, confirming its robust multi-class anomaly detection performance on MVTec AD and VisA, and demonstrating the essential role of its Intrinsic Normal Prototype mechanism. Our deeper analysis reveals critical nuances not highlighted in the original work: the auxiliary losses ($L_{sm}$ and $L_c$) independently optimize detection and localization, respectively, and the optimal number of prototypes is highly dataset-dependent.
+
+Through our novel extensions, we demonstrate that INP-Former is highly practical for real-world use, as it converges rapidly and supports highly efficient domain transfer via LoRA using only 5\% of trainable parameters. However, we also identify notable limitations for rigorous industrial deployment: the model struggles to detect subtle, small-area defects, is vulnerable to out-of-distribution color shifts, and exhibits significant localization degradation under strict false-positive thresholds (FPR ≤ 0.05). Ultimately, while INP-Former provides a highly capable and efficient architecture, deploying it in production environments will require targeted hyperparameter tuning and careful consideration of domain-specific constraints.
+
 \label{sec:conclusion}
 % ============================================================================
 
-We successfully reproduce the central claims of INP-Former~\citep{inp_former_2025}. The method achieves state-of-the-art multi-class anomaly detection on MVTec AD and VisA, matching the reported numbers within 0.1 percentage points. The INP mechanism and soft-mining loss are confirmed to be important components through our ablation study. Our extensions reveal that: (1) performance on the more challenging MVTec AD 2 is substantially lower, with different optimal hyperparameters; (2) LoRA-based transfer learning recovers 97--98\% of fully-trained performance on MVTec AD using only 5\% of trainable parameters; (3) the INP mechanism improves not only mean performance but also training stability across random seeds; (4) the model largely converges by epoch 50, with diminishing returns beyond epoch 100; (5) small anomalies ($<0.5\%$ area) are the primary failure mode, with detection rate dropping to 63.6\%; (6) pixel-level localization degrades substantially ($-$20.9 AU-PRO points) under strict FPR thresholds; and (7) color shifts in lighting degrade performance by up to 13.7 I-AUROC points, while brightness changes have minimal impact.
 
 
 \subsubsection*{Author Contributions}
 % TODO: fill in when deanonymized
+% Both authors contributed equally.
 
 \subsubsection*{Acknowledgments}
+
 % TODO: fill in when deanonymized
 % Computational resources provided by the FRIDA HPC cluster at the University of Ljubljana.
-
 
 \bibliography{main}
 \bibliographystyle{tmlr}
@@ -473,12 +478,12 @@ We successfully reproduce the central claims of INP-Former~\citep{inp_former_202
 \section{Per-Category Results}
 \label{app:per_category}
 
-\begin{table}[h]
+\begin{table}[H]
 \caption{Per-category results on MVTec AD (ViT-Base/14, 448/392, $M$=6).}
 \label{tab:mvtec_per_cat}
 \begin{center}
 \small
-\begin{tabular}{lcccc}
+\begin{tabular}{lccccc}
 \toprule
 Category & I-AUROC & P-AUROC & P-AUPRO & P-AUPRO$_{0.05}$ \\
 \midrule
@@ -504,7 +509,7 @@ zipper     & 100.0 & 98.98 & 96.86 & 82.24 \\
 \end{center}
 \end{table}
 
-\begin{table}[h]
+\begin{table}[H]
 \caption{Per-category results on MVTec AD 2 (ViT-Base/14, 448/392, $M$=6).}
 \label{tab:ad2_per_cat}
 \begin{center}
@@ -530,7 +535,7 @@ walnuts      & 78.06 & 95.93 & 65.70 & 31.58 \\
 \section{Per-Category Lighting Robustness}
 \label{app:lightshift}
 
-\begin{table}[h]
+\begin{table}[H]
 \caption{Per-category I-AUROC on MVTec AD 2 under different lighting conditions.}
 \label{tab:lightshift_iauroc}
 \begin{center}
@@ -553,7 +558,7 @@ walnuts      & 97.3 & 97.3 & 97.3 & 47.3 & 97.3 & 58.7 \\
 \end{center}
 \end{table}
 
-\begin{table}[h]
+\begin{table}[H]
 \caption{Per-category P-AUPRO on MVTec AD 2 under different lighting conditions.}
 \label{tab:lightshift_aupro}
 \begin{center}
@@ -576,6 +581,5 @@ walnuts      & 75.5 & 75.4 & 75.7 & 58.8 & 74.9 & 62.9 \\
 \end{center}
 \end{table}
 
-Wallplugs shows the most severe degradation: I-AUROC drops from 44.7\% to 25.3\% under shift\_3, and P-AUPRO from 64.8\% to 38.0\% under shift\_2. Walnuts is selectively vulnerable: shift\_1 collapses I-AUROC from 97.3\% to 47.3\% while shift\_2 has no effect. Vial remains the most robust category, maintaining $>$90\% I-AUROC across all conditions. Fruit\_jelly lacks shift\_2 and shift\_3 test sets in the dataset.
-
 \end{document}
+
