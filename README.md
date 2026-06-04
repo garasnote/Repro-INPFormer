@@ -59,7 +59,7 @@ Download and place in the **parent directory** of this repo (i.e., `../`):
 | MVTec-AD | [mvtec.com](https://www.mvtec.com/company/research/datasets/mvtec-ad) | `../mvtec_anomaly_detection/` |
 | VisA | [amazon-science/spot-diff](https://github.com/amazon-science/spot-diff) | `../VisA_pytorch/1cls/` |
 | Real-IAD | [realiad4ad.github.io](https://realiad4ad.github.io/Real-IAD/) | `../Real-IAD/` |
-| MVTec-AD2 | [HuggingFace](https://huggingface.co/datasets/alexriedel1/MVTec-AD2) | `../mvtec_anomaly_detection/` (merged) |
+| MVTec-AD2 | [mvtec.com]([https://huggingface.co/datasets/alexriedel1/MVTec-AD2](https://www.mvtec.com/research-teaching/datasets/mvtec-ad-2)) | `../mvtec_anomaly_detection/` (merged) |
 
 For MVTec-AD2, use `scripts/extract_mvtecad2.sh` or `scripts/download_mvtec_hf.py`.
 For VisA, preprocess into 1-class format using the [official splitting code](https://github.com/amazon-science/spot-diff).
