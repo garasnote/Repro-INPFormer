@@ -128,7 +128,7 @@ if __name__ == '__main__':
 
     # target dataset info
     parser.add_argument('--dataset', type=str, default=r'MVTec-AD') # 'MVTec-AD'
-    parser.add_argument('--data_path', type=str, default=r'E:\IMSN-LW\dataset\mvtec_anomaly_detection') # Replace it with your path.
+    parser.add_argument('--data_path', type=str, default='data/mvtec_ad')
 
     # save info
     parser.add_argument('--save_dir', type=str, default='./saved_results')
@@ -153,15 +153,15 @@ if __name__ == '__main__':
 
     # target category info
     if args.dataset == 'MVTec-AD':
-        # args.data_path = 'E:\IMSN-LW\dataset\mvtec_anomaly_detection' # '/path/to/dataset/MVTec-AD/'
+        # Default data path: data/mvtec_ad
         args.item_list = ['carpet', 'grid', 'leather', 'tile', 'wood', 'bottle', 'cable', 'capsule',
                  'hazelnut', 'metal_nut', 'pill', 'screw', 'toothbrush', 'transistor', 'zipper']
     elif args.dataset == 'VisA':
-        # args.data_path = r'E:\IMSN-LW\dataset\VisA_pytorch\1cls'  # '/path/to/dataset/VisA/'
+        # Pass --data_path data/visa/1cls
         args.item_list = ['candle', 'capsules', 'cashew', 'chewinggum', 'fryum', 'macaroni1', 'macaroni2',
                  'pcb1', 'pcb2', 'pcb3', 'pcb4', 'pipe_fryum']
     elif args.dataset == 'Real-IAD':
-        # args.data_path = 'E:\IMSN-LW\dataset\Real-IAD'  # '/path/to/dataset/Real-IAD/'
+        # Pass --data_path data/Real-IAD
         args.item_list = ['audiojack', 'bottle_cap', 'button_battery', 'end_cap', 'eraser', 'fire_hood',
                  'mint', 'mounts', 'pcb', 'phone_battery', 'plastic_nut', 'plastic_plug',
                  'porcelain_doll', 'regulator', 'rolled_strip_base', 'sim_card_set', 'switch', 'tape',

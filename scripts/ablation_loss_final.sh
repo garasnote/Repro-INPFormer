@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=abl-final
-#SBATCH --output=/shared/home/juan.osorio/ml/logs/abl-final-%j.out
-#SBATCH --error=/shared/home/juan.osorio/ml/logs/abl-final-%j.out
+#SBATCH --output=logs/abl-final-%j.out
+#SBATCH --error=logs/abl-final-%j.out
 #SBATCH --partition=frida
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=4
@@ -13,13 +13,13 @@
 #   2. full (y=3,λ=0.2) ×5  (5 runs)
 # 6 runs × ~15h = ~90h. Skip-if-exists for safe resubmission.
 
-CONTAINER="/shared/workspace/lkm/juan.osorio/container/inpformer_env.sqfs"
-BASE_DIR="/shared/home/juan.osorio/ml"
+BASE_DIR="${INPFORMER_ROOT:-${SLURM_SUBMIT_DIR}}"
+CONTAINER="${BASE_DIR}/containers/inpformer_env.sqfs"
 
 srun \
     --container-image="${CONTAINER}" \
     --container-mounts=/shared:/shared \
-    --container-workdir="${BASE_DIR}/INP-Former" \
+    --container-workdir="${BASE_DIR}" \
     bash -c '
 
 sleep 10
@@ -29,7 +29,7 @@ nvidia-smi --query-gpu=name,memory.total --format=csv,noheader
 echo "Started: $(date)"
 echo "============================================"
 
-COMMON="--encoder dinov2reg_vit_base_14 --input_size 448 --crop_size 392 --INP_num 6 --batch_size 16 --total_epochs 200 --phase train --dataset MVTec-AD --data_path ../data/mvtec_anomaly_detection"
+COMMON="--encoder dinov2reg_vit_base_14 --input_size 448 --crop_size 392 --INP_num 6 --batch_size 16 --total_epochs 200 --phase train --dataset MVTec-AD --data_path data/mvtec_ad"
 
 run() {
     local DESC="$1"; shift

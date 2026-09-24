@@ -6,9 +6,9 @@ Standard INP-Former pipeline only computes AU-PRO_0.30 via adeval.
 This script uses the CPU compute_pro with configurable fpr_limit.
 
 Usage:
-  python eval_aupro_strict.py --dataset MVTec-AD2 --data_path ../data/mvtec_anomaly_detection_2 \
+  python eval_aupro_strict.py --dataset MVTec-AD2 --data_path data/mvtec_ad2 \
       --weights saved_results/.../model.pth
-  python eval_aupro_strict.py --dataset MVTec-AD --data_path ../data/mvtec_anomaly_detection \
+  python eval_aupro_strict.py --dataset MVTec-AD --data_path data/mvtec_ad \
       --weights saved_results/.../model.pth
 """
 import torch

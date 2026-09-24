@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=aupro-strict
-#SBATCH --output=/shared/home/juan.osorio/ml/logs/aupro-strict-%j.out
-#SBATCH --error=/shared/home/juan.osorio/ml/logs/aupro-strict-%j.out
+#SBATCH --output=logs/aupro-strict-%j.out
+#SBATCH --error=logs/aupro-strict-%j.out
 #SBATCH --partition=frida
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=4
@@ -12,13 +12,13 @@
 # CPU-based compute_pro is slow but gives both metrics.
 # Usage: sbatch eval_aupro_strict.sh
 
-CONTAINER="/shared/workspace/lkm/juan.osorio/container/inpformer_env.sqfs"
-BASE_DIR="/shared/home/juan.osorio/ml"
+BASE_DIR="${INPFORMER_ROOT:-${SLURM_SUBMIT_DIR}}"
+CONTAINER="${BASE_DIR}/containers/inpformer_env.sqfs"
 
 srun \
     --container-image="${CONTAINER}" \
     --container-mounts=/shared:/shared \
-    --container-workdir="${BASE_DIR}/INP-Former" \
+    --container-workdir="${BASE_DIR}" \
     bash -c '
 
 sleep 10
@@ -35,7 +35,7 @@ echo ">>> MVTec-AD2: AU-PRO 0.30 + 0.05 | $(date)"
 echo "============================================"
 python eval_aupro_strict.py \
     --dataset MVTec-AD2 \
-    --data_path ../data/mvtec_ad_2 \
+    --data_path data/mvtec_ad2 \
     --weights "${AD2_WEIGHTS}" \
     --num_th 300 2>&1
 
@@ -45,7 +45,7 @@ echo ">>> MVTec-AD: AU-PRO 0.30 + 0.05 | $(date)"
 echo "============================================"
 python eval_aupro_strict.py \
     --dataset MVTec-AD \
-    --data_path ../data/mvtec_anomaly_detection \
+    --data_path data/mvtec_ad \
     --weights "${MVTEC_WEIGHTS}" \
     --num_th 300 2>&1
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=area-analysis
-#SBATCH --output=/shared/home/juan.osorio/ml/logs/area-analysis-%j.out
-#SBATCH --error=/shared/home/juan.osorio/ml/logs/area-analysis-%j.out
+#SBATCH --output=logs/area-analysis-%j.out
+#SBATCH --error=logs/area-analysis-%j.out
 #SBATCH --partition=frida
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=4
@@ -12,13 +12,13 @@
 # Tests hypothesis: large anomalies degrade INP extraction → worse detection.
 # Usage: sbatch anomaly_area_analysis.sh
 
-CONTAINER="/shared/workspace/lkm/juan.osorio/container/inpformer_env.sqfs"
-BASE_DIR="/shared/home/juan.osorio/ml"
+BASE_DIR="${INPFORMER_ROOT:-${SLURM_SUBMIT_DIR}}"
+CONTAINER="${BASE_DIR}/containers/inpformer_env.sqfs"
 
 srun \
     --container-image="${CONTAINER}" \
     --container-mounts=/shared:/shared \
-    --container-workdir="${BASE_DIR}/INP-Former" \
+    --container-workdir="${BASE_DIR}" \
     bash -c '
 
 sleep 10
@@ -35,7 +35,7 @@ echo ">>> MVTec-AD area analysis | $(date)"
 echo "============================================"
 python anomaly_area_analysis.py \
     --dataset MVTec-AD \
-    --data_path ../data/mvtec_anomaly_detection \
+    --data_path data/mvtec_ad \
     --weights "${MVTEC_WEIGHTS}" 2>&1
 
 echo ""
@@ -44,7 +44,7 @@ echo ">>> VisA area analysis | $(date)"
 echo "============================================"
 python anomaly_area_analysis.py \
     --dataset VisA \
-    --data_path ../data/VisA_pytorch/1cls \
+    --data_path data/visa/1cls \
     --weights "${VISA_WEIGHTS}" 2>&1
 
 echo ""

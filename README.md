@@ -27,6 +27,9 @@ Reproduction and extended analysis of [INP-Former: Exploring Intrinsic Normal Pr
 ├── dinov2/               # DINOv2 backbone (default)
 ├── optimizers/           # StableAdamW
 ├── scripts/              # SLURM job scripts (SLURM cluster)
+├── data/                 # Local datasets (ignored by Git)
+├── containers/           # Local Enroot image (ignored by Git)
+├── logs/                 # Setup and SLURM logs (ignored by Git)
 ├── paper/                # Reproducibility report (TMLR format)
 ├── assets/               # Figures from the original paper
 └── EXPERIMENTS.md        # Experiment tracker with all results
@@ -52,17 +55,47 @@ The DINOv2 Register ViT-Base/14 backbone is downloaded automatically on first ru
 
 ### Datasets
 
-Download and place in the **parent directory** of this repo (i.e., `../`):
+Run all setup and experiment commands from the repository root. Datasets and the
+container stay inside the checkout and are ignored by Git:
 
 | Dataset | Source | Target path |
 |---------|--------|-------------|
-| MVTec-AD | [mvtec.com](https://www.mvtec.com/company/research/datasets/mvtec-ad) | `../mvtec_anomaly_detection/` |
-| VisA | [amazon-science/spot-diff](https://github.com/amazon-science/spot-diff) | `../VisA_pytorch/1cls/` |
-| Real-IAD | [realiad4ad.github.io](https://realiad4ad.github.io/Real-IAD/) | `../Real-IAD/` |
-| MVTec-AD2 | [mvtec.com](https://www.mvtec.com/research-teaching/datasets/mvtec-ad-2) | `../mvtec_anomaly_detection/` (merged) |
+| MVTec-AD | [Voxel51 mirror](https://huggingface.co/datasets/Voxel51/mvtec-ad) | `data/mvtec_ad/` |
+| VisA | [amazon-science/spot-diff](https://github.com/amazon-science/spot-diff) | `data/visa/1cls/` |
+| Real-IAD | [realiad4ad.github.io](https://realiad4ad.github.io/Real-IAD/) | `data/Real-IAD/` |
+| MVTec-AD2 | [mvtec.com](https://www.mvtec.com/research-teaching/datasets/mvtec-ad-2) | `data/mvtec_ad2/` |
 
-For MVTec-AD2, use `scripts/extract_mvtecad2.sh` or `scripts/download_mvtec_hf.py`.
-For VisA, preprocess into 1-class format using the [official splitting code](https://github.com/amazon-science/spot-diff).
+On FRIDA, submit the setup pipeline from the repository root. The helper safely
+extracts numeric Slurm job IDs even when FRIDA prints its banner to standard
+output. MVTec AD and VisA wait for the container; MVTec AD 2 can download
+independently, and the smoke test waits for the container, MVTec AD, and VisA:
+
+```bash
+cd /path/to/Repro-INPFormer
+bash scripts/submit_setup.sh
+```
+
+To resume after only some jobs were submitted, pass their active job IDs back to
+the helper, for example:
+`CONTAINER_JOB=12345 AD2_JOB=12346 bash scripts/submit_setup.sh`.
+
+MVTec AD 2 download links can expire. Obtain the eight current category links
+from the [official MVTec AD 2 page](https://www.mvtec.com/research-teaching/datasets/mvtec-ad-2),
+then provide them as `MVTECAD2_<CATEGORY>_URL` environment variables. For example:
+
+```bash
+export MVTECAD2_CAN_URL='<current can URL>'
+export MVTECAD2_FABRIC_URL='<current fabric URL>'
+# Also set FRUIT_JELLY, RICE, SHEET_METAL, VIAL, WALLPLUGS, and WALNUTS.
+sbatch --export=ALL scripts/extract_mvtecad2.sh
+```
+
+All eight variables are needed for a new download. Categories already present
+and complete under `data/mvtec_ad2/` are skipped.
+
+Each setup job stops on the first error, writes a timestamped log under `logs/`,
+and ends with `SETUP SUCCESS` or `SETUP FAILED: <reason>`. The VisA job checks
+the official archive SHA-256 and applies Amazon's official `1cls.csv` split.
 
 ## Reproducing Results
 
@@ -71,11 +104,11 @@ For VisA, preprocess into 1-class format using the [official splitting code](htt
 ```bash
 # MVTec-AD
 python INP_Former_Multi_Class.py --dataset MVTec-AD \
-    --data_path ../mvtec_anomaly_detection --phase train
+    --data_path data/mvtec_ad --phase train
 
 # VisA
 python INP_Former_Multi_Class.py --dataset VisA \
-    --data_path ../VisA_pytorch/1cls --phase train
+    --data_path data/visa/1cls --phase train
 ```
 
 Expected results (I-AUROC / P-AUROC / P-AUPRO):
@@ -89,17 +122,17 @@ Ablation on MVTec-AD with seeds {1, 2, 3, 42, 123}:
 ```bash
 # No INP baseline (y=0, lambda=0)
 python INP_Former_Multi_Class.py --dataset MVTec-AD \
-    --data_path ../mvtec_anomaly_detection --phase train \
+    --data_path data/mvtec_ad --phase train \
     --INP_num 0 --sm_gamma 0 --seed 1
 
 # INP + Lsm only (y=3, lambda=0)
 python INP_Former_Multi_Class.py --dataset MVTec-AD \
-    --data_path ../mvtec_anomaly_detection --phase train \
+    --data_path data/mvtec_ad --phase train \
     --sm_gamma 3 --coherence_lambda 0 --seed 1
 
 # Full model (y=3, lambda=0.2) — default
 python INP_Former_Multi_Class.py --dataset MVTec-AD \
-    --data_path ../mvtec_anomaly_detection --phase train --seed 1
+    --data_path data/mvtec_ad --phase train --seed 1
 ```
 
 Or via SLURM: `sbatch scripts/ablation_loss_final.sh`
@@ -108,7 +141,7 @@ Or via SLURM: `sbatch scripts/ablation_loss_final.sh`
 
 ```bash
 python lora_finetune.py --dataset MVTec-AD \
-    --data_path ../mvtec_anomaly_detection \
+    --data_path data/mvtec_ad \
     --pretrained_weights saved_results/.../model.pth \
     --lora_rank 4
 ```
@@ -118,18 +151,18 @@ python lora_finetune.py --dataset MVTec-AD \
 ```bash
 # Anomaly area vs detection performance
 python anomaly_area_analysis.py --dataset MVTec-AD \
-    --data_path ../mvtec_anomaly_detection \
+    --data_path data/mvtec_ad \
     --weights saved_results/.../model.pth
 
 # AU-PRO at strict FPR (0.05)
 python eval_aupro_strict.py --dataset MVTec-AD \
-    --data_path ../mvtec_anomaly_detection \
+    --data_path data/mvtec_ad \
     --weights saved_results/.../model.pth
 
 # Lighting robustness (requires MVTec-AD2)
-python lightshift_analysis.py --dataset MVTec-AD \
-    --data_path ../mvtec_anomaly_detection \
-    --weights saved_results/.../model.pth
+python lightshift_analysis.py \
+    --data_path data/mvtec_ad2 \
+    --load_from saved_results/.../model.pth
 
 # Inference throughput
 python inference_benchmark.py --weights saved_results/.../model.pth
@@ -140,7 +173,11 @@ python inference_benchmark.py --weights saved_results/.../model.pth
 All SLURM scripts are in `scripts/` and use Enroot containers on FRIDA.
 
 ```bash
-sbatch scripts/setup_inpformer_env.sh       # Build container
+sbatch scripts/setup_inpformer_env.sh        # Build container
+sbatch scripts/download_mvtec.sh             # Download MVTec AD
+sbatch scripts/download_visa.sh              # Download and prepare VisA
+sbatch scripts/extract_mvtecad2.sh           # Download MVTec AD 2
+sbatch scripts/smoke_test.sh                  # One-GPU setup smoke test
 sbatch scripts/test_all_multiclass.sh        # Main reproduction
 sbatch scripts/ablation_loss_final.sh        # Ablation with seeds
 sbatch scripts/lora_finetune.sh              # LoRA experiments

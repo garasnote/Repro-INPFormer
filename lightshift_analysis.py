@@ -90,7 +90,7 @@ class MVTecAD2LightDataset(torch.utils.data.Dataset):
 
 def main():
     parser = argparse.ArgumentParser(description='Light Shift Robustness Analysis')
-    parser.add_argument('--data_path', type=str, default='../data/mvtec_ad_2')
+    parser.add_argument('--data_path', type=str, default='data/mvtec_ad2')
     parser.add_argument('--load_from', type=str,
                         default='saved_results/INP-Former-Multi-Class_dataset=MVTec-AD2_Encoder=dinov2reg_vit_base_14_Resize=448_Crop=392_INP_num=6_y=3_lambda=0.2/model.pth',
                         help='Path to pretrained model.pth')

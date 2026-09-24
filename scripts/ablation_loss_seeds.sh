@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=abl-loss-seed
-#SBATCH --output=/shared/home/juan.osorio/ml/logs/abl-loss-seed-%j.out
-#SBATCH --error=/shared/home/juan.osorio/ml/logs/abl-loss-seed-%j.out
+#SBATCH --output=logs/abl-loss-seed-%j.out
+#SBATCH --error=logs/abl-loss-seed-%j.out
 #SBATCH --partition=frida
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=4
@@ -28,13 +28,13 @@
 #   sbatch --export=DATASET_IDX=1,CONFIG_RANGE="0 1 2" ablation_loss_seeds.sh   # VisA configs 0-2
 #   sbatch --export=DATASET_IDX=1,CONFIG_RANGE="3 4" ablation_loss_seeds.sh     # VisA configs 3-4
 
-CONTAINER="/shared/workspace/lkm/juan.osorio/container/inpformer_env.sqfs"
-BASE_DIR="/shared/home/juan.osorio/ml"
+BASE_DIR="${INPFORMER_ROOT:-${SLURM_SUBMIT_DIR}}"
+CONTAINER="${BASE_DIR}/containers/inpformer_env.sqfs"
 
 srun \
     --container-image="${CONTAINER}" \
     --container-mounts=/shared:/shared \
-    --container-workdir="${BASE_DIR}/INP-Former" \
+    --container-workdir="${BASE_DIR}" \
     bash -c '
 
 sleep 10
@@ -53,7 +53,7 @@ declare -a L_VALS=( 0.0         0.0         0.2         0.0         0.2)
 declare -a SEEDS=(1 2 3 42 123)
 
 declare -a DATASETS=("MVTec-AD" "VisA")
-declare -a DATAPATHS=("../data/mvtec_anomaly_detection" "../data/VisA_pytorch/1cls")
+declare -a DATAPATHS=("data/mvtec_ad" "data/visa/1cls")
 
 # Use env vars to select subset, default to all
 D_LIST="${DATASET_IDX:-0 1}"
