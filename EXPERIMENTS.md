@@ -4,7 +4,7 @@
 
 **Course:** MLDS2  
 **Last updated:** 2026-05-23  
-**Cluster:** FRIDA (repository root; override with `INPFORMER_ROOT` if needed)
+**Cluster:** Slurm (repository root; override with `INPFORMER_ROOT` if needed)
 
 ---
 

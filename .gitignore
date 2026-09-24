@@ -1,6 +1,5 @@
 # Generated evaluations and transfer packages
 evaluation_results/
-handoff_juan/
 third_party/mvtec/*.tar.gz
 third_party/mvtec/*.tar.xz
 

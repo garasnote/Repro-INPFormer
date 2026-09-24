@@ -2,7 +2,7 @@
 
 Reproduction and extended analysis of [INP-Former: Exploring Intrinsic Normal Prototypes within a Single Image for Universal Anomaly Detection](https://arxiv.org/abs/2503.02424) (Luo et al., CVPR 2025).
 
-**Course:** MLDS2, University of Ljubljana  
+**Course:** MLDS2  
 **Paper:** See `paper/main.tex`
 
 ## Repository Structure
