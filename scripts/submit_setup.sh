@@ -1,13 +1,15 @@
 #!/bin/bash
 
-# Submit the complete FRIDA setup pipeline from the repository root.
+# Submit the complete Slurm setup pipeline from the repository root.
+# On clusters without Pyxis the container build is skipped and jobs use the
+# active Python environment (install requirements.txt first).
 # Existing job IDs may be supplied in the environment to resume a partial submission.
 
 set -Eeuo pipefail
 
-PROJECT_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
-cd "${PROJECT_ROOT}"
-mkdir -p data containers logs
+source "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/env.sh"
+cd "${INPFORMER_ROOT}"
+mkdir -p data logs
 
 submit_job() {
     local raw job_id
@@ -28,8 +30,8 @@ submit_job() {
     printf '%s\n' "${job_id}"
 }
 
-if [[ -r "containers/inpformer_env.sqfs" ]]; then
-    CONTAINER_JOB="${CONTAINER_JOB:-existing}"
+if [[ -r "${INPFORMER_CONTAINER}" ]] || [[ "${INPFORMER_CONTAINER}" == none ]] || ! inp_has_pyxis; then
+    CONTAINER_JOB="${CONTAINER_JOB:-skipped}"
     MVTEC_JOB="${MVTEC_JOB:-$(submit_job scripts/download_mvtec.sh)}"
     VISA_JOB="${VISA_JOB:-$(submit_job scripts/download_visa.sh)}"
 else

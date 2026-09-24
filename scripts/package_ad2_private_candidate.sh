@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # Stage and validate one AD2 private submission candidate, then run the
 # unmodified official checker/compressor. This script never uploads anything.
-#SBATCH --partition=frida
 #SBATCH --cpus-per-task=32
 #SBATCH --mem=16G
 #SBATCH --time=04:00:00
@@ -16,15 +15,12 @@ if [[ $# -ne 1 || ! $1 =~ ^(1|6)$ ]]; then
 fi
 
 m=$1
-repo=${SLURM_SUBMIT_DIR:?Submit this script from the repository root}
+source "${INPFORMER_ROOT:-${SLURM_SUBMIT_DIR:-$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)}}/scripts/env.sh"
+repo="${INPFORMER_ROOT}"
 run_root="${repo}/evaluation_results/ad2-private-submission-v1/M${m}"
 candidate="${run_root}/submission_m${m}"
-container="${repo}/containers/inpformer_env.sqfs"
 
-srun \
-    --container-image="${container}" \
-    --container-mounts=/shared:/shared \
-    --container-workdir="${repo}" \
+inp_run "${repo}" \
     python scripts/prepare_ad2_server_submission.py \
         --manifests \
             "${run_root}/test_private/manifest.json" \
@@ -32,9 +28,6 @@ srun \
         --output "${candidate}"
 
 cd "${run_root}"
-srun \
-    --container-image="${container}" \
-    --container-mounts=/shared:/shared \
-    --container-workdir="${run_root}" \
+inp_run "${run_root}" \
     python "${repo}/third_party/mvtec/MVTecAD2_public_code_utils/check_and_prepare_data_for_upload.py" \
         "submission_m${m}"

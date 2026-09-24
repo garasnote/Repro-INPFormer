@@ -2,7 +2,6 @@
 #SBATCH --job-name=epoch-eff
 #SBATCH --output=logs/epoch-eff-%j.out
 #SBATCH --error=logs/epoch-eff-%j.out
-#SBATCH --partition=frida
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=32G
@@ -14,13 +13,10 @@
 # Produces convergence data for the paper (Table/Figure).
 # Usage: sbatch --gres=gpu:<TYPE>:1 epoch_efficiency.sh
 
-BASE_DIR="${INPFORMER_ROOT:-${SLURM_SUBMIT_DIR}}"
-CONTAINER="${BASE_DIR}/containers/inpformer_env.sqfs"
+source "${INPFORMER_ROOT:-${SLURM_SUBMIT_DIR:-$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)}}/scripts/env.sh"
+BASE_DIR="${INPFORMER_ROOT}"
 
-srun \
-    --container-image="${CONTAINER}" \
-    --container-mounts=/shared:/shared \
-    --container-workdir="${BASE_DIR}" \
+inp_run "${BASE_DIR}" \
     bash -c '
 
 sleep 10

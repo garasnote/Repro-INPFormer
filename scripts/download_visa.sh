@@ -2,7 +2,6 @@
 #SBATCH --job-name=dl-visa
 #SBATCH --output=logs/dl-visa-%j.out
 #SBATCH --error=logs/dl-visa-%j.err
-#SBATCH --partition=amd
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=8G
 #SBATCH --time=04:00:00
@@ -12,8 +11,8 @@
 
 set -Eeuo pipefail
 
-PROJECT_ROOT="${INPFORMER_ROOT:-${SLURM_SUBMIT_DIR:-$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)}}"
-CONTAINER="${PROJECT_ROOT}/containers/inpformer_env.sqfs"
+source "${INPFORMER_ROOT:-${SLURM_SUBMIT_DIR:-$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)}}/scripts/env.sh"
+PROJECT_ROOT="${INPFORMER_ROOT}"
 LOG="${PROJECT_ROOT}/logs/setup-visa-$(date -u +%Y%m%dT%H%M%SZ)-${SLURM_JOB_ID:-manual}.log"
 
 mkdir -p "${PROJECT_ROOT}/data" "${PROJECT_ROOT}/logs"
@@ -22,12 +21,8 @@ trap 'status=$?; echo "SETUP FAILED: VisA download or preparation failed (exit $
 exec 9>"${PROJECT_ROOT}/logs/.setup-visa.lock"
 flock --nonblock 9 || { echo "Another VisA setup job is already running." >&2; false; }
 
-[[ -r "${CONTAINER}" ]]
 export NVIDIA_VISIBLE_DEVICES=void
-srun \
-    --container-image="${CONTAINER}" \
-    --container-mounts=/shared:/shared \
-    --container-workdir="${PROJECT_ROOT}" \
+inp_run "${PROJECT_ROOT}" \
     bash -c '
         set -Eeuo pipefail
 

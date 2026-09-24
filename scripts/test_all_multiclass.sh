@@ -2,7 +2,6 @@
 #SBATCH --job-name=test-mc-all
 #SBATCH --output=logs/test-mc-all-%j.out
 #SBATCH --error=logs/test-mc-all-%j.err
-#SBATCH --partition=frida
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=32G
@@ -12,13 +11,10 @@
 # Downloads missing weights automatically. Trains MVTec-AD2 (no pretrained available).
 # Usage: sbatch test_all_multiclass.sh
 
-BASE_DIR="${INPFORMER_ROOT:-${SLURM_SUBMIT_DIR}}"
-CONTAINER="${BASE_DIR}/containers/inpformer_env.sqfs"
+source "${INPFORMER_ROOT:-${SLURM_SUBMIT_DIR:-$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)}}/scripts/env.sh"
+BASE_DIR="${INPFORMER_ROOT}"
 
-srun \
-    --container-image="${CONTAINER}" \
-    --container-mounts=/shared:/shared \
-    --container-workdir="${BASE_DIR}" \
+inp_run "${BASE_DIR}" \
     bash -c '
 set -e
 

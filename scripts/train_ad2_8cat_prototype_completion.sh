@@ -2,9 +2,7 @@
 #SBATCH --job-name=ad2-8cat-proto
 #SBATCH --output=logs/ad2-8cat-proto-%j.out
 #SBATCH --error=logs/ad2-8cat-proto-%j.err
-#SBATCH --partition=frida
-#SBATCH --gres=gpu:A100:1
-#SBATCH --exclude=aga
+#SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=32G
 #SBATCH --time=12:00:00
@@ -17,8 +15,8 @@ if [[ $# -ne 1 || ! "$1" =~ ^(4|8|12|16)$ ]]; then
 fi
 
 prototype_count="$1"
-base_dir="${INPFORMER_ROOT:-${SLURM_SUBMIT_DIR}}"
-container="${base_dir}/containers/inpformer_env.sqfs"
+source "${INPFORMER_ROOT:-${SLURM_SUBMIT_DIR:-$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)}}/scripts/env.sh"
+base_dir="${INPFORMER_ROOT}"
 run_name="INP-Former-Multi-Class-8cat-sweep_dataset=MVTec-AD2_Encoder=dinov2reg_vit_base_14_Resize=448_Crop=392_INP_num=${prototype_count}_y=3_lambda=0.2_seed=1_INP"
 run_dir="${base_dir}/saved_results/${run_name}"
 
@@ -32,10 +30,7 @@ echo "M=${prototype_count}"
 echo "Output=${run_dir}"
 echo "Started=$(date --iso-8601=seconds)"
 
-srun \
-    --container-image="${container}" \
-    --container-mounts=/shared:/shared \
-    --container-workdir="${base_dir}" \
+inp_run "${base_dir}" \
     python INP_Former_Multi_Class.py \
         --dataset MVTec-AD2 \
         --data_path data/mvtec_ad2 \

@@ -2,7 +2,6 @@
 #SBATCH --job-name=dl-mvtecad2
 #SBATCH --output=logs/dl-mvtecad2-%j.out
 #SBATCH --error=logs/dl-mvtecad2-%j.err
-#SBATCH --partition=amd
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=8G
 #SBATCH --time=12:00:00
@@ -12,7 +11,8 @@
 
 set -Eeuo pipefail
 
-PROJECT_ROOT="${INPFORMER_ROOT:-${SLURM_SUBMIT_DIR:-$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)}}"
+source "${INPFORMER_ROOT:-${SLURM_SUBMIT_DIR:-$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)}}/scripts/env.sh"
+PROJECT_ROOT="${INPFORMER_ROOT}"
 DEST="${PROJECT_ROOT}/data/mvtec_ad2"
 LOG="${PROJECT_ROOT}/logs/setup-mvtecad2-$(date -u +%Y%m%dT%H%M%SZ)-${SLURM_JOB_ID:-manual}.log"
 

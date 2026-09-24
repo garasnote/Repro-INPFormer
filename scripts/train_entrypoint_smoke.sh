@@ -2,17 +2,15 @@
 #SBATCH --job-name=inp-train-smoke
 #SBATCH --output=logs/inp-train-smoke-%j.out
 #SBATCH --error=logs/inp-train-smoke-%j.err
-#SBATCH --partition=frida
-#SBATCH --gres=gpu:A100:1
-#SBATCH --exclude=aga
+#SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=32G
 #SBATCH --time=00:20:00
 
 set -Eeuo pipefail
 
-BASE_DIR="${INPFORMER_ROOT:-${SLURM_SUBMIT_DIR:-$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)}}"
-CONTAINER="${BASE_DIR}/containers/inpformer_env.sqfs"
+source "${INPFORMER_ROOT:-${SLURM_SUBMIT_DIR:-$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)}}/scripts/env.sh"
+BASE_DIR="${INPFORMER_ROOT}"
 SOURCE_DATA="${BASE_DIR}/data/mvtec_ad"
 SMOKE_DATA="${BASE_DIR}/data/.training_smoke/mvtec_ad_full_test"
 SAVE_ROOT="${BASE_DIR}/saved_results/training_smoke"
@@ -25,10 +23,6 @@ items=(carpet grid leather tile wood bottle cable capsule hazelnut metal_nut pil
 cd "${BASE_DIR}"
 mkdir -p logs "${SAVE_ROOT}"
 
-if [[ ! -r "${CONTAINER}" ]]; then
-    echo "TRAINING SMOKE FAILED: unreadable container: ${CONTAINER}" >&2
-    exit 1
-fi
 
 # Build a non-destructive, symlink-only smoke dataset. One normal train image per
 # category gives one optimizer step. The full test split is linked read-only so
@@ -55,10 +49,7 @@ echo "TRAINING SMOKE: actual INP_Former_Multi_Class.py entry point"
 echo "WORKLOAD: 15 train images, one batch, one epoch; full read-only test split"
 echo "STARTED: $(date --iso-8601=seconds)"
 
-srun \
-    --container-image="${CONTAINER}" \
-    --container-mounts=/shared:/shared \
-    --container-workdir="${BASE_DIR}" \
+inp_run "${BASE_DIR}" \
     python INP_Former_Multi_Class.py \
         --dataset MVTec-AD \
         --data_path "${SMOKE_DATA}" \

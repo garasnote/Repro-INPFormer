@@ -2,9 +2,7 @@
 #SBATCH --job-name=mvtec-inp-corrective
 #SBATCH --output=logs/mvtec-inp-corrective-%A_%a.out
 #SBATCH --error=logs/mvtec-inp-corrective-%A_%a.err
-#SBATCH --partition=frida
-#SBATCH --gres=gpu:A100:1
-#SBATCH --exclude=aga
+#SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=32G
 #SBATCH --time=12:00:00
@@ -12,18 +10,14 @@
 
 set -Eeuo pipefail
 
-BASE_DIR="${INPFORMER_ROOT:-${SLURM_SUBMIT_DIR:-$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)}}"
-CONTAINER="${BASE_DIR}/containers/inpformer_env.sqfs"
+source "${INPFORMER_ROOT:-${SLURM_SUBMIT_DIR:-$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)}}/scripts/env.sh"
+BASE_DIR="${INPFORMER_ROOT}"
 DATA_PATH="${BASE_DIR}/data/mvtec_ad"
 SAVE_ROOT="${BASE_DIR}/saved_results"
 
 cd "${BASE_DIR}"
 mkdir -p logs "${SAVE_ROOT}"
 
-if [[ ! -r "${CONTAINER}" ]]; then
-    echo "TRAINING FAILED: unreadable container: ${CONTAINER}" >&2
-    exit 1
-fi
 if [[ ! -d "${DATA_PATH}/bottle/train/good" ]]; then
     echo "TRAINING FAILED: MVTec AD is missing or incomplete: ${DATA_PATH}" >&2
     exit 1
@@ -56,10 +50,7 @@ if [[ -e "${checkpoint}" ]]; then
     exit 1
 fi
 
-srun \
-    --container-image="${CONTAINER}" \
-    --container-mounts=/shared:/shared \
-    --container-workdir="${BASE_DIR}" \
+inp_run "${BASE_DIR}" \
     python INP_Former_Multi_Class.py \
         --dataset MVTec-AD \
         --data_path "${DATA_PATH}" \

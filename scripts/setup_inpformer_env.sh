@@ -2,22 +2,23 @@
 #SBATCH --job-name=setup-inpformer
 #SBATCH --output=logs/setup-container-%j.out
 #SBATCH --error=logs/setup-container-%j.err
-#SBATCH --partition=dev
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=16G
 #SBATCH --time=01:00:00
 
-# Build the INP-Former container on a FRIDA compute node.
+# Build the INP-Former Enroot container on a Slurm cluster with the Pyxis plugin.
+# Without Pyxis, skip this and install requirements.txt into a Python env instead.
 # Submit from the repository root: sbatch scripts/setup_inpformer_env.sh
 
 set -Eeuo pipefail
 
-PROJECT_ROOT="${INPFORMER_ROOT:-${SLURM_SUBMIT_DIR:-$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)}}"
-CONTAINER_OUT="${PROJECT_ROOT}/containers/inpformer_env.sqfs"
+source "${INPFORMER_ROOT:-${SLURM_SUBMIT_DIR:-$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)}}/scripts/env.sh"
+PROJECT_ROOT="${INPFORMER_ROOT}"
+CONTAINER_OUT="${INPFORMER_CONTAINER}"
 LOG="${PROJECT_ROOT}/logs/setup-container-$(date -u +%Y%m%dT%H%M%SZ)-${SLURM_JOB_ID:-manual}.log"
 
-mkdir -p "${PROJECT_ROOT}/containers" "${PROJECT_ROOT}/logs"
+mkdir -p "$(dirname -- "${CONTAINER_OUT}")" "${PROJECT_ROOT}/logs"
 exec > >(tee -a "${LOG}") 2>&1
 trap 'status=$?; echo "SETUP FAILED: container build failed (exit ${status})"; exit "${status}"' ERR
 exec 9>"${PROJECT_ROOT}/logs/.setup-container.lock"
@@ -29,10 +30,12 @@ if [[ -e "${CONTAINER_OUT}" ]]; then
     false
 fi
 
+inp_has_pyxis || { echo "srun has no --container-image (Pyxis); use a native Python env instead." >&2; false; }
+
 echo ">>> Building container: ${CONTAINER_OUT}"
 srun \
   --container-image=nvcr.io#nvidia/cuda:12.3.2-cudnn9-devel-ubuntu22.04 \
-  --container-mounts=/shared:/shared \
+  --container-mounts="${PROJECT_ROOT}:${PROJECT_ROOT}" \
   --container-workdir="${PROJECT_ROOT}" \
   --container-save="${CONTAINER_OUT}" \
   bash -c '

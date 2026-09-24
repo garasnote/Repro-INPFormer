@@ -2,7 +2,6 @@
 #SBATCH --job-name=abl-loss-seed
 #SBATCH --output=logs/abl-loss-seed-%j.out
 #SBATCH --error=logs/abl-loss-seed-%j.out
-#SBATCH --partition=frida
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=32G
@@ -28,13 +27,10 @@
 #   sbatch --export=DATASET_IDX=1,CONFIG_RANGE="0 1 2" ablation_loss_seeds.sh   # VisA configs 0-2
 #   sbatch --export=DATASET_IDX=1,CONFIG_RANGE="3 4" ablation_loss_seeds.sh     # VisA configs 3-4
 
-BASE_DIR="${INPFORMER_ROOT:-${SLURM_SUBMIT_DIR}}"
-CONTAINER="${BASE_DIR}/containers/inpformer_env.sqfs"
+source "${INPFORMER_ROOT:-${SLURM_SUBMIT_DIR:-$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)}}/scripts/env.sh"
+BASE_DIR="${INPFORMER_ROOT}"
 
-srun \
-    --container-image="${CONTAINER}" \
-    --container-mounts=/shared:/shared \
-    --container-workdir="${BASE_DIR}" \
+inp_run "${BASE_DIR}" \
     bash -c '
 
 sleep 10

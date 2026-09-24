@@ -26,7 +26,7 @@ Reproduction and extended analysis of [INP-Former: Exploring Intrinsic Normal Pr
 ├── backbones/            # Encoder weights (auto-downloaded)
 ├── dinov2/               # DINOv2 backbone (default)
 ├── optimizers/           # StableAdamW
-├── scripts/              # SLURM job scripts (SLURM cluster)
+├── scripts/              # SLURM job scripts (also runnable with bash)
 ├── data/                 # Local datasets (ignored by Git)
 ├── containers/           # Local Enroot image (ignored by Git)
 ├── logs/                 # Setup and SLURM logs (ignored by Git)
@@ -65,10 +65,11 @@ container stay inside the checkout and are ignored by Git:
 | Real-IAD | [realiad4ad.github.io](https://realiad4ad.github.io/Real-IAD/) | `data/Real-IAD/` |
 | MVTec-AD2 | [mvtec.com](https://www.mvtec.com/research-teaching/datasets/mvtec-ad-2) | `data/mvtec_ad2/` |
 
-On FRIDA, submit the setup pipeline from the repository root. The helper safely
-extracts numeric Slurm job IDs even when FRIDA prints its banner to standard
-output. MVTec AD and VisA wait for the container; MVTec AD 2 can download
-independently, and the smoke test waits for the container, MVTec AD, and VisA:
+On a Slurm cluster, submit the setup pipeline from the repository root. If the
+cluster has the Pyxis/Enroot plugin, a container is built first and MVTec AD and
+VisA wait for it; otherwise the container step is skipped and every job uses the
+active Python environment. MVTec AD 2 downloads independently, and the smoke test
+waits for MVTec AD and VisA:
 
 ```bash
 cd /path/to/Repro-INPFormer
@@ -168,12 +169,22 @@ python lightshift_analysis.py \
 python inference_benchmark.py --weights saved_results/.../model.pth
 ```
 
-## SLURM (FRIDA Cluster)
+## SLURM
 
-All SLURM scripts are in `scripts/` and use Enroot containers on FRIDA.
+All job scripts are in `scripts/` and must be submitted from the repository root
+(or with `INPFORMER_ROOT` set). They request generic resources only; add your
+cluster's partition, account, or GPU type on the command line, e.g.
+`sbatch -p gpu --gres=gpu:a100:1 scripts/test_all_multiclass.sh`.
+
+Each script runs its workload through `scripts/env.sh`: inside the Enroot image
+`containers/inpformer_env.sqfs` when Pyxis is available and the image exists, and in
+the current Python environment otherwise. Set `INPFORMER_CONTAINER=none` to force the
+native environment, or `INPFORMER_CONTAINER_MOUNTS=/data:/data` to expose datasets
+stored outside the checkout to the container. Most scripts also run without Slurm,
+e.g. `bash scripts/test_all_multiclass.sh`.
 
 ```bash
-sbatch scripts/setup_inpformer_env.sh        # Build container
+sbatch scripts/setup_inpformer_env.sh        # Build container (Pyxis clusters only)
 sbatch scripts/download_mvtec.sh             # Download MVTec AD
 sbatch scripts/download_visa.sh              # Download and prepare VisA
 sbatch scripts/extract_mvtecad2.sh           # Download MVTec AD 2

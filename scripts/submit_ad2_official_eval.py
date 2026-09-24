@@ -16,7 +16,7 @@ from mvtec_official_adapter import write_json
 
 
 def submit(command):
-    # FRIDA's sbatch wrapper prints a banner before the parsable job ID.
+    # Some sbatch wrappers print a banner before the parsable job ID.
     raw = subprocess.check_output(command, cwd=ROOT, text=True)
     ids = [line.split(';')[0] for line in raw.splitlines()
            if re.fullmatch(r'\d+(;[A-Za-z0-9_.-]+)?', line.strip())]

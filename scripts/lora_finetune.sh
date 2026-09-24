@@ -2,7 +2,6 @@
 #SBATCH --job-name=lora-ft
 #SBATCH --output=logs/lora-ft-%j.out
 #SBATCH --error=logs/lora-ft-%j.out
-#SBATCH --partition=frida
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=32G
@@ -14,13 +13,10 @@
 # Also sweeps rank = 2, 4, 8 to find sweet spot.
 # Usage: sbatch lora_finetune.sh
 
-BASE_DIR="${INPFORMER_ROOT:-${SLURM_SUBMIT_DIR}}"
-CONTAINER="${BASE_DIR}/containers/inpformer_env.sqfs"
+source "${INPFORMER_ROOT:-${SLURM_SUBMIT_DIR:-$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)}}/scripts/env.sh"
+BASE_DIR="${INPFORMER_ROOT}"
 
-srun \
-    --container-image="${CONTAINER}" \
-    --container-mounts=/shared:/shared \
-    --container-workdir="${BASE_DIR}" \
+inp_run "${BASE_DIR}" \
     bash -c '
 
 sleep 10
