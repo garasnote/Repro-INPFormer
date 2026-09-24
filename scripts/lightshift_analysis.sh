@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=lightshift
-#SBATCH --output=/shared/home/juan.osorio/ml/logs/lightshift-%j.out
-#SBATCH --error=/shared/home/juan.osorio/ml/logs/lightshift-%j.err
+#SBATCH --output=logs/lightshift-%j.out
+#SBATCH --error=logs/lightshift-%j.err
 #SBATCH --partition=frida
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=4
@@ -12,13 +12,13 @@
 # Uses already-trained multi-class model, evaluates per lighting condition
 # Usage: sbatch lightshift_analysis.sh
 
-CONTAINER="/shared/workspace/lkm/juan.osorio/container/inpformer_env.sqfs"
-BASE_DIR="/shared/home/juan.osorio/ml"
+BASE_DIR="${INPFORMER_ROOT:-${SLURM_SUBMIT_DIR}}"
+CONTAINER="${BASE_DIR}/containers/inpformer_env.sqfs"
 
 srun \
     --container-image="${CONTAINER}" \
     --container-mounts=/shared:/shared \
-    --container-workdir="${BASE_DIR}/INP-Former" \
+    --container-workdir="${BASE_DIR}" \
     python lightshift_analysis.py \
-        --data_path ../data/mvtec_ad_2 \
+        --data_path data/mvtec_ad2 \
         --batch_size 16

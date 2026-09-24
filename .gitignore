@@ -1,3 +1,9 @@
+# Generated evaluations and transfer packages
+evaluation_results/
+handoff_juan/
+third_party/mvtec/*.tar.gz
+third_party/mvtec/*.tar.xz
+
 # Weights and results
 backbones/*.pth
 backbones/*.pt
@@ -14,6 +20,8 @@ __pycache__/
 
 # Data (download separately)
 data/
+containers/
+*.sqfs
 mvtec_anomaly_detection/
 VisA_pytorch/
 Real-IAD/

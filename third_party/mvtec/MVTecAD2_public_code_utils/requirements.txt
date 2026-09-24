@@ -1,0 +1,12 @@
+# Copyright (C) 2025 MVTec Software GmbH
+# SPDX-License-Identifier: CC-BY-NC-4.0
+
+# Apart from a working PyTorch installation including torch and torchvision,
+# the following packages can be required.
+# The packages can be installed using pip via 'pip install -r requirements.txt'.
+
+pandas==1.4.4
+numpy==1.23.1
+tqdm==4.64.0
+Pillow==9.4.0
+tifffile==2022.5.4

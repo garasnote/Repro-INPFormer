@@ -1,0 +1,34 @@
+{
+  "retrieved_utc": "2026-09-15T15:36:26.434338+00:00",
+  "archives": {
+    "mvtec_ad_evaluation.tar.xz": {
+      "url": "https://www.mydrive.ch/shares/150450/bb24b914a28ddd2b5e35bd53d23177cd/download/439517473-1665675012/mvtec_ad_evaluation.tar.xz",
+      "sha256": "dfcda7d67eee25316ec6ae5042c0b1684a4cabf33b2346be351e2ce36013f220"
+    },
+    "MVTecAD2_public_code_utils.tar.gz": {
+      "url": "https://www.mydrive.ch/shares/121509/40399aba7a28cfc47a7d804553228b25/download/466656866-1743171051/MVTecAD2_public_code_utils.tar.gz",
+      "sha256": "fda9b379affbbde8b4d4fc1fe6ac52aaff981f347f3424e6b6de027457549f15"
+    }
+  },
+  "files": {
+    "mvtec_ad_evaluation/requirements.txt": "a42dd3e58c16e93231a1826999f57b1ec93df99dc52aafa57586adbdee086984",
+    "mvtec_ad_evaluation/evaluate_experiment.py": "c8f9c06072112399ae542ce049188921394fee21996d7797df9ae72ef668c29e",
+    "mvtec_ad_evaluation/LICENSE.txt": "6b564f197a243d80bf44d09224d2a6302ee13a8ef4a7dc1152f1e8df3ccc43d2",
+    "mvtec_ad_evaluation/conda_environment.yml": "46039b52f8cd26725d2ad55361ef185a4d1f00dcc6bfaf5139b977dc0dce1452",
+    "mvtec_ad_evaluation/evaluate_multiple_experiments.py": "b688eed2ce938b5152835bfe4d85d2c4901265ded4b7a804d870a1dd78506290",
+    "mvtec_ad_evaluation/generic_util.py": "96ed3135f23f49a75a767891dd1e3c975973590af31cad0cc39f655f6d76fef2",
+    "mvtec_ad_evaluation/README.md": "07b890074235c6b6e75bee5acf671c251dd71a0775b41de29c1a1f00d0a5b2d0",
+    "mvtec_ad_evaluation/roc_curve_util.py": "fccc992991caf973d2c34a49d3a174662ac2cf90651f4ca026d09d21f1044c96",
+    "mvtec_ad_evaluation/print_metrics.py": "879f64b678ff3ced3291aba4634bff79ca88ab33f51d4ea051544992bb2e5030",
+    "mvtec_ad_evaluation/experiment_configs.json": "5df5437129d10f978dbb710032c7920a11f4b91c1db4150abe518ede62ba8364",
+    "mvtec_ad_evaluation/pro_curve_util.py": "80feff3b5c96023a93ec3a28494583c7732f639547f572982952bb6d0469a29d",
+    "MVTecAD2_public_code_utils/README.txt": "973082aad8363dc345df7774381a9d19fb9693330c71eded830f8a978770b6b4",
+    "MVTecAD2_public_code_utils/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "MVTecAD2_public_code_utils/check_and_prepare_data_for_upload.py": "c02518512219bf4844a119c6f4f7776716149c3cd932f8bc38cd8fb9d4cbc0f9",
+    "MVTecAD2_public_code_utils/license.txt": "3d914cf4dd0530f2c91aa9d6d6a528d16547260ceffb582b5b83861d024d1ab1",
+    "MVTecAD2_public_code_utils/measure_runtime_and_memory.py": "df23625d69da19968301e626b1c00e90b8855de5fdcee6ef2251aed092452577",
+    "MVTecAD2_public_code_utils/mvtec_ad_2_public_offline.py": "29f1299d97448724cc4838d6d8ecd6010204f7e985bb7f36005a0e5184a39282",
+    "MVTecAD2_public_code_utils/requirements.txt": "b18d795d4c8b92d1d16cd1e53219d432f9a3bb6069f04029b64bda02e386445f",
+    "MVTecAD2_public_code_utils/utils.py": "11a3db48bc1e8a3777af3786f9611941c19584e87877211ca77470650325f849"
+  }
+}

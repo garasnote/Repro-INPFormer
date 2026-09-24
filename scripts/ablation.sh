@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=ablation
-#SBATCH --output=/shared/home/juan.osorio/ml/logs/ablation-%j.out
-#SBATCH --error=/shared/home/juan.osorio/ml/logs/ablation-%j.out
+#SBATCH --output=logs/ablation-%j.out
+#SBATCH --error=logs/ablation-%j.out
 #SBATCH --partition=frida
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=4
@@ -15,13 +15,13 @@
 #   4. Epoch efficiency: train 200 epochs with evals at 25, 50, 100, 150
 # Usage: sbatch ablation.sh
 
-CONTAINER="/shared/workspace/lkm/juan.osorio/container/inpformer_env.sqfs"
-BASE_DIR="/shared/home/juan.osorio/ml"
+BASE_DIR="${INPFORMER_ROOT:-${SLURM_SUBMIT_DIR}}"
+CONTAINER="${BASE_DIR}/containers/inpformer_env.sqfs"
 
 srun \
     --container-image="${CONTAINER}" \
     --container-mounts=/shared:/shared \
-    --container-workdir="${BASE_DIR}/INP-Former" \
+    --container-workdir="${BASE_DIR}" \
     bash -c '
 
 sleep 10
@@ -29,8 +29,8 @@ echo "GPU:"
 nvidia-smi --query-gpu=name,memory.total --format=csv,noheader
 echo "Started: $(date)"
 
-COMMON_MVTEC="--dataset MVTec-AD --data_path ../data/mvtec_anomaly_detection --input_size 448 --crop_size 392 --batch_size 16 --total_epochs 200 --phase train"
-COMMON_AD2="--dataset MVTec-AD2 --data_path ../data/mvtec_ad_2 --input_size 448 --crop_size 392 --batch_size 16 --total_epochs 200 --phase train"
+COMMON_MVTEC="--dataset MVTec-AD --data_path data/mvtec_ad --input_size 448 --crop_size 392 --batch_size 16 --total_epochs 200 --phase train"
+COMMON_AD2="--dataset MVTec-AD2 --data_path data/mvtec_ad2 --input_size 448 --crop_size 392 --batch_size 16 --total_epochs 200 --phase train"
 
 run() {
     echo ""

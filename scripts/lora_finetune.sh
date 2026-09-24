@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=lora-ft
-#SBATCH --output=/shared/home/juan.osorio/ml/logs/lora-ft-%j.out
-#SBATCH --error=/shared/home/juan.osorio/ml/logs/lora-ft-%j.out
+#SBATCH --output=logs/lora-ft-%j.out
+#SBATCH --error=logs/lora-ft-%j.out
 #SBATCH --partition=frida
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=4
@@ -14,13 +14,13 @@
 # Also sweeps rank = 2, 4, 8 to find sweet spot.
 # Usage: sbatch lora_finetune.sh
 
-CONTAINER="/shared/workspace/lkm/juan.osorio/container/inpformer_env.sqfs"
-BASE_DIR="/shared/home/juan.osorio/ml"
+BASE_DIR="${INPFORMER_ROOT:-${SLURM_SUBMIT_DIR}}"
+CONTAINER="${BASE_DIR}/containers/inpformer_env.sqfs"
 
 srun \
     --container-image="${CONTAINER}" \
     --container-mounts=/shared:/shared \
-    --container-workdir="${BASE_DIR}/INP-Former" \
+    --container-workdir="${BASE_DIR}" \
     bash -c '
 
 sleep 10
@@ -29,8 +29,8 @@ nvidia-smi --query-gpu=name,memory.total --format=csv,noheader
 echo "Started: $(date)"
 
 # Fix Real-IAD json symlink (needed if source weights require loading Real-IAD data)
-if [ ! -e "../data/Real-IAD/realiad_jsons/realiad_jsons" ]; then
-    ln -s . "../data/Real-IAD/realiad_jsons/realiad_jsons"
+if [ ! -e "data/Real-IAD/realiad_jsons/realiad_jsons" ]; then
+    ln -s . "data/Real-IAD/realiad_jsons/realiad_jsons"
 fi
 
 # Download Real-IAD multi-class weights if missing
@@ -53,7 +53,7 @@ for RANK in ${LORA_RANKS:-2 4 8}; do
     echo "============================================"
     python lora_finetune.py $COMMON \
         --dataset MVTec-AD \
-        --data_path ../data/mvtec_anomaly_detection \
+        --data_path data/mvtec_ad \
         --lora_rank ${RANK} 2>&1
     echo ">>> Finished: $(date)"
 
@@ -63,7 +63,7 @@ for RANK in ${LORA_RANKS:-2 4 8}; do
     echo "============================================"
     python lora_finetune.py $COMMON \
         --dataset VisA \
-        --data_path ../data/VisA_pytorch/1cls \
+        --data_path data/visa/1cls \
         --lora_rank ${RANK} 2>&1
     echo ">>> Finished: $(date)"
 done

@@ -220,9 +220,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='')
 
     # dataset info
-    parser.add_argument('--mvtec_data_path', type=str, default=r'E:\IMSN-LW\dataset\mvtec_anomaly_detection') # Replace it with your path.
-    parser.add_argument('--visa_data_path', type=str, default=r'E:\IMSN-LW\dataset\VisA_pytorch\1cls') # Replace it with your path.
-    parser.add_argument('--real_iad_data_path', type=str, default=r'E:\IMSN-LW\dataset\Real-IAD') # Replace it with your path.
+    parser.add_argument('--mvtec_data_path', type=str, default='data/mvtec_ad')
+    parser.add_argument('--visa_data_path', type=str, default='data/visa/1cls')
+    parser.add_argument('--real_iad_data_path', type=str, default='data/Real-IAD')
 
     # save info
     parser.add_argument('--save_dir', type=str, default='./saved_results')

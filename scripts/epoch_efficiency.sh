@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=epoch-eff
-#SBATCH --output=/shared/home/juan.osorio/ml/logs/epoch-eff-%j.out
-#SBATCH --error=/shared/home/juan.osorio/ml/logs/epoch-eff-%j.out
+#SBATCH --output=logs/epoch-eff-%j.out
+#SBATCH --error=logs/epoch-eff-%j.out
 #SBATCH --partition=frida
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=4
@@ -14,13 +14,13 @@
 # Produces convergence data for the paper (Table/Figure).
 # Usage: sbatch --gres=gpu:<TYPE>:1 epoch_efficiency.sh
 
-CONTAINER="/shared/workspace/lkm/juan.osorio/container/inpformer_env.sqfs"
-BASE_DIR="/shared/home/juan.osorio/ml"
+BASE_DIR="${INPFORMER_ROOT:-${SLURM_SUBMIT_DIR}}"
+CONTAINER="${BASE_DIR}/containers/inpformer_env.sqfs"
 
 srun \
     --container-image="${CONTAINER}" \
     --container-mounts=/shared:/shared \
-    --container-workdir="${BASE_DIR}/INP-Former" \
+    --container-workdir="${BASE_DIR}" \
     bash -c '
 
 sleep 10
@@ -48,7 +48,7 @@ python INP_Former_Multi_Class.py \
     --save_name EpochEff \
     --phase train \
     --dataset MVTec-AD \
-    --data_path ../data/mvtec_anomaly_detection 2>&1
+    --data_path data/mvtec_ad 2>&1
 
 echo ""
 echo "============================================"

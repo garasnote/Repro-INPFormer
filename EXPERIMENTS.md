@@ -1,8 +1,10 @@
 # INP-Former Reproduction: Experimental Plan & Status
 
+> Historical ledger (last updated 2026-05-23). Its MVTec-AD2 results used seven categories and excluded `fabric`; they are not results for the current eight-category training/evaluation workflow.
+
 **Course:** MLDS2  
 **Last updated:** 2026-05-23  
-**Cluster:** FRIDA (`/shared/home/juan.osorio/ml/`)
+**Cluster:** FRIDA (repository root; override with `INPFORMER_ROOT` if needed)
 
 ---
 
@@ -13,7 +15,7 @@ Reproducing INP-Former (CVPR 2025) — reconstruction-based anomaly detection us
 **Total experiments:** ~30 completed, ~10 remaining  
 **Datasets:** MVTec-AD (15 categories), VisA (12), Real-IAD (30), MVTec-AD2 (7)  
 **Backbone:** DINOv2 Register ViT-Base/14 (default), ViT-Small/14 (ablation)  
-**Container:** `/shared/workspace/lkm/juan.osorio/container/inpformer_env.sqfs`
+**Container:** `containers/inpformer_env.sqfs`
 
 ---
 
